@@ -1,5 +1,6 @@
 from sheetsAPI import runSheets;
 from style import printCabecalho, printColor, cor;
+from tqdm import tqdm; #Barra de loading
 id = '1KfcO6J8_oLxTQIsdZ1l4XmBz-teP-pbpGoU7NnZa_KA'
 
 class Gasto:
@@ -47,7 +48,7 @@ class Mes:
         if totalEntradas > totalGastos:
             printColor(f'Balanço Total: {totalEntradas-totalGastos}', color='verde')
         else:
-            printColor(f'Balanço Total: {totalEntradas-totalGastos}', color='vermelho')
+            printColor(f'Balanço Total: {totalEntradas-totalGastos}', color='azul')
 
 
 def getData():
@@ -55,7 +56,8 @@ def getData():
                   'Maio', 'Junho', 'Julho', 'Agosto',
                   'Setembro', 'Outubro', 'Novembro','Dezembro']
     listaMeses = []
-    for mes in listaMesesAux:
+    printColor('Carregando meses... Aguarde', color='azul')
+    for mes in tqdm(listaMesesAux):
         mesAux = Mes(mes)
         gastos = runSheets(id,mes, '!A2:G50')
         for i in gastos[0]:
