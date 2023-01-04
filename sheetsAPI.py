@@ -29,7 +29,7 @@ def loginGoogle():
             token.write(creds.to_json())
     return creds
 
-def runSheets(id, month, interval):
+def getSheets(id, month, interval):
     #SAMPLE_SPREADSHEET_ID = input('Insira o endereço da tabela ')
     #SAMPLE_RANGE_NAME = 'Página1!' + input('Insira raio da tabela ')
     
@@ -52,8 +52,19 @@ def runSheets(id, month, interval):
     except HttpError as err:
         print(err)
 
-if __name__ == '__main__':
-    id = '1KfcO6J8_oLxTQIsdZ1l4XmBz-teP-pbpGoU7NnZa_KA'
-    v, s = runSheets(id, 'Janeiro')
-    print(v)
-    
+def updateSheets(id, month, interval, newData):
+    SAMPLE_SPREADSHEET_ID = id
+    SAMPLE_RANGE_NAME = month+interval
+    creds = loginGoogle()
+    try:
+        service = build('sheets', 'v4', credentials=creds)
+        sheet = service.spreadsheets()
+        sheet.values().update(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                            range=SAMPLE_RANGE_NAME, 
+                            valueInputOption='USER_ENTERED',
+                            body={"values": newData}).execute()
+
+        
+    except HttpError as err:
+        print(err)
+
