@@ -15,13 +15,30 @@ dictionaryMeses = {
     12: 'Dezembro', 'Dezembro' : 12
 }
 
-
+def toFloat(valor):
+    if ',' in valor:
+        valor = valor.replace(',', '.')
+    if valor.count('.')> 1:
+        contador = valor.count('.')
+        newValor = ''
+        for i in valor:
+            if i == '.':
+                if contador == 1:
+                    newValor += '.'
+                else:
+                    contador -= 1
+            else:
+                newValor += i
+        valor = newValor
+    valor = float(valor)
+    return valor
+    
 
 class Gasto:
     def __init__(self, getSheetsReturn):
         self.gasto = getSheetsReturn[0]
         self.data = getSheetsReturn[1]
-        self.valor = float(getSheetsReturn[2])
+        self.valor = toFloat(getSheetsReturn[2])
         self.categoria = getSheetsReturn[3]
         self.tipo = getSheetsReturn[4]
         self.parcelas = getSheetsReturn[5]
@@ -49,6 +66,7 @@ class Mes:
         self.nome = nome
         self.listaGastos = []
         self.listaEntradas = []
+        
     def print(self):
         totalGastos = 0
         totalEntradas = 0
@@ -64,12 +82,14 @@ class Mes:
             item.print()
             totalGastos += item.valor
         print(cor('Balanço Geral'.center(80), color='azul', reverse=True))
-        printColor(f'Entradas: {totalEntradas}', color='verde')
-        printColor(f'Gastos: {totalGastos}', color='vermelho')
+        printColor(f'Entradas: {round(totalEntradas,2)}', color='verde')
+        printColor(f'Gastos: {round(totalGastos,2)}', color='vermelho')
         if totalEntradas > totalGastos:
-            printColor(f'Balanço Total: {totalEntradas-totalGastos}', color='verde')
+            printColor(f'Balanço Total: {round(totalEntradas-totalGastos, 2)}', color='verde')
         else:
-            printColor(f'Balanço Total: {totalEntradas-totalGastos}', color='vermelho')
+            printColor(f'Balanço Total: {round(totalEntradas-totalGastos,2)}', color='vermelho')
+        return totalEntradas, totalGastos
+
     def getArray(self, type):
         array = []
         if type == 'gastos':
@@ -80,3 +100,32 @@ class Mes:
                 array.append(item.getUpdate())
         return array
 
+class Category:
+    def __init__(self, nome):
+        self.nome = nome
+        self.dictGastos = {
+            'Janeiro': 0,
+            'Fevereiro': 0,
+            'Marco': 0,
+            'Abril': 0,
+            'Maio': 0,
+            'Junho': 0,
+            'Julho': 0,
+            'Agosto': 0,
+            'Setembro': 0,
+            'Outubro': 0,
+            'Novembro': 0,
+            'Dezembro': 0,
+        }
+    def show(self):
+        printCabecalho(self.nome, color='amarelo', reverse=True)
+        soma = 0
+        for item in self.dictGastos.keys():
+            print(cor('{}:({}) '.format(item, self.dictGastos[item])), end='')
+            soma += self.dictGastos[item]
+        print(f'\nTotal com {self.nome}: {soma}')
+        print(self.getArray)
+    def getArray(self):
+        lista = [i for i in self.dictGastos.values()]
+        return lista
+            

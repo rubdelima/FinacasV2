@@ -1,8 +1,10 @@
 from tqdm import tqdm; #Barra de loading
 from style import printColor, printCabecalho, cor;
-from classes import Mes, Gasto, Entrada;
+from classes import Mes, Gasto, Entrada, Category;
 from sheetsAPI import *
+import matplotlib.pyplot as plt
 import time
+
 
 id = '1KfcO6J8_oLxTQIsdZ1l4XmBz-teP-pbpGoU7NnZa_KA'
 listaMesesAux = ['Janeiro', 'Fevereiro', 'Marco', 'Abril', 
@@ -42,13 +44,71 @@ class Main:
     def __init__(self):
         self.listaMeses = getData()
         
-    def showData(self, mes=None):
+    def showData(self, mes=None, graph=False):
+        listaEntradas = []
+        listaSaidas = []
+        listaES = []
+        listaSaldo = [0]
         if mes == None:
             for i in self.listaMeses:
-                i.print()
+                e, s = i.print()
+                listaEntradas.append(e)
+                listaSaidas.append(s)
+                listaES.append(e-s)
+                listaSaldo.append(listaSaldo[-1]+e-s)
         else:
             self.listaMeses[mes].print()
-            
+        if graph and mes == None:
+            del listaSaldo[0]
+            self.showGraph(listaEntradas, listaSaidas, listaES, listaSaldo)
+    def showGraph(self, e, s, es, sal):
+        plt.plot(listaMesesAux, e, c='g', label='Entradas', marker='o', ls='-', lw='1')
+        plt.plot(listaMesesAux, s, c='r', label='Gastos', marker='o', ls='-', lw='1')
+        plt.plot(listaMesesAux, es, c='y', label='Balanço Mês', marker='o',ls='-', lw='1')
+        plt.plot(listaMesesAux,sal, c='b', label='Saldo', marker='o', ls='-', lw='1')
+        plt.legend(loc='lower left')
+        plt.show()
+    
+    def addInCategory(self,nome, mes, valor):
+        aux = Category(nome)
+        aux.dictGastos[mes] = valor
+        return aux
+    
+    def updateInCategory(self):
+        self.listaCategorias = [] #lista de Categorias
+        for i in self.listaMeses: #um for pelos objetos de classe Mes
+            for j in i.listaGastos: #para cada item gastos
+                if j.categoria in [k.nome for k in self.listaCategorias]: #se a categoria ja estiver na lista
+                    for k in self.listaCategorias: #pecorro a lista
+                        if j.categoria == k.nome: #se eu achar o nome certo
+                            if i.nome not in k.dictGastos.keys():
+                                k.dictGastos[i.nome] = j.valor
+                            else:
+                                k.dictGastos[i.nome] += j.valor
+                else:
+                    aux = self.listaCategorias.append(
+                        self.addInCategory(j.categoria, i.nome, j.valor))
+        
+    
+    def showCategorias(self):
+        self.updateInCategory()
+        for i in self.listaCategorias:
+            i.show()
+    
+    def categoriasGraphic(self):
+        self.updateInCategory()
+        listaC = []
+        listaCV =[]
+        for i in self.listaCategorias:
+            listaC.append(i.nome)
+            listaCV.append(sum(i.dictGastos.values()))
+        figl, axl = plt.subplots()
+        axl.pie(listaCV, labels=listaC, autopct='%1.1f%%',
+                shadow=True, startangle=90)
+        axl.axis('equal')
+        plt.show()
+
+                            
     def addNewGasto(self):
         while(True):
             try:
@@ -121,6 +181,7 @@ class Main:
                 printColor(f'ERRO! Digite um valor válido', color='vermelho')
     def updateSheets(self):
         updateData(self.listaMeses)
+    
         
 if __name__ == '__main__':
     printCabecalho('Bem vindo a Finanças V2', color='azul', reverse=True, tam_cab=2)
@@ -133,13 +194,15 @@ if __name__ == '__main__':
         '5': main.addEntradas,
         '6': main.removeEntradas,
         '7': main.updateSheets,
+        '11': main.showCategorias,
+        '12' : main.categoriasGraphic
     }
     while(True):
         print("""O que deseja fazer?
-[1] - Listar ano        [2] - Listar um mês
-[3] - Adicionar gasto   [4] - Remover gasto
-[5] - Adicionar entrada [6] - Remover entrada
-[7] - Salvar Alterações [8] - Salvar e Sair""")
+[1] - Listar ano         [2] - Listar um mês      [3] - Adicionar gasto   
+[4] - Remover gasto      [5] - Adicionar entrada  [6] - Remover entrada
+[7] - Salvar Alterações  [8] - Salvar e Sair      [9] -Sair sem Salvar
+[10] - Ano c/ Gráfico    [11] - Listar Categoria  [12] - Gráfico Categorias""")
         entrada = input()
         if entrada in switch.keys():
             if entrada == '2':
@@ -155,6 +218,10 @@ if __name__ == '__main__':
             main.updateSheets()
             printCabecalho('Obrigado, até mais', color='azul', reverse=True, tam_cab=2)
             break
+        elif entrada == '9':
+            break
+        elif entrada == '10':
+            main.showData(graph=True)
         else:
             printColor(f'ERRO! Digite um valor válido', color='vermelho')
     #obs: remover itens de compras no cartão
